@@ -1,3 +1,4 @@
+from django.http import HttpResponseRedirect, HttpResponseNotFound
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -35,3 +36,35 @@ def product_tag_view(request, tags):
     data = TagSerializer(product).data
     return Response(data=data)
 
+@api_view(['POST'])
+def product_create(request):
+    if request.method == "POST":
+        product = Product()
+        product.title = request.POST.get("title")
+        product.price = request.POST.get("price")
+        product.save()
+    return HttpResponseRedirect("/")
+
+@api_view(['POST'])
+def product_edit(request, id):
+    try:
+        product = Product.objects.get(id=id)
+
+        if request.method == 'POST':
+            product.title = request.POST.get('title')
+            product.price = request.POST.get('price')
+            product.save()
+            return HttpResponseRedirect('/')
+        else:
+            return render(request, "edit.html", {"person": product})
+    except Product.DoesNotExist:
+        return HttpResponseNotFound("<h2>Product not found</h2>")
+
+api_view(['GET'])
+def product_delete(request, id):
+    try:
+        product = Product.objects.get(id=id)
+        product.delete()
+        return HttpResponseRedirect("/")
+    except Product.DoesNotExist:
+        return HttpResponseNotFound("<h2>Product not found</h2>")
